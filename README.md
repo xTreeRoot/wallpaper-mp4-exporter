@@ -45,7 +45,7 @@ winget install Gyan.FFmpeg
 ## Install
 
 ```bash
-git clone https://github.com/your-name/wallpaper-mp4-exporter.git
+git clone https://github.com/xTreeRoot/wallpaper-mp4-exporter.git
 cd wallpaper-mp4-exporter
 python3 -m pip install -e .
 ```
@@ -80,6 +80,24 @@ Use the form to set:
 - `Limit`: maximum number of videos to export. `0` means export everything; use `1` or `2` for a quick test.
 - `Encryption key`: under advanced options. Usually leave it empty; auto mode already handles known supported encrypted caches.
 - `Overwrite existing MP4 files`: checked by default so repeated exports refresh existing MP4 files.
+
+## Environment Defaults
+
+The web UI derives defaults from the current user's machine. It does not hard-code a username or a single computer path:
+
+- `WALLPAPER_MP4_EXPORTER_SOURCE` overrides the source path.
+- `WALLPAPER_MP4_EXPORTER_OUTPUT` overrides the output path.
+- Without an output override, exports default to `mp4导出` under the current user's downloads directory.
+- On macOS, the app detects the current user's iWallpaper cache folder and scans `~/Library/Containers/*/Data/Documents` for cache folders shaped like `Videos/` plus `DesktopImage/`, `Images/`, or `screen`.
+- If no source path is detected, the source field stays empty and the user can choose a folder or file from the picker.
+
+Example:
+
+```bash
+WALLPAPER_MP4_EXPORTER_SOURCE="/path/to/cache-or-media" \
+WALLPAPER_MP4_EXPORTER_OUTPUT="$HOME/Downloads/mp4导出" \
+wallpaper-mp4-exporter web --open
+```
 
 ## CLI
 

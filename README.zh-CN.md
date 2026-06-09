@@ -45,7 +45,7 @@ winget install Gyan.FFmpeg
 ## 安装
 
 ```bash
-git clone https://github.com/your-name/wallpaper-mp4-exporter.git
+git clone https://github.com/xTreeRoot/wallpaper-mp4-exporter.git
 cd wallpaper-mp4-exporter
 python3 -m pip install -e .
 ```
@@ -80,6 +80,24 @@ http://127.0.0.1:8765/zh-CN
 - `导出数量`：最多导出多少个。`0` 表示全部导出，先测试可以填 `1` 或 `2`。
 - `加密密钥`：在“高级选项”里，通常留空。自动识别会处理已支持的加密缓存，只有明确知道某个缓存需要自定义密钥时才填写。
 - `覆盖已存在的 MP4 文件`：默认勾选，重复导出时会更新已有 MP4。
+
+## 环境适配
+
+Web UI 会按 clone 者当前电脑自动填默认值，不写死某个用户名或某台机器的路径：
+
+- 如果设置了 `WALLPAPER_MP4_EXPORTER_SOURCE`，优先用它作为来源路径。
+- 如果设置了 `WALLPAPER_MP4_EXPORTER_OUTPUT`，优先用它作为输出路径。
+- 未设置输出路径时，默认使用当前用户的下载目录下的 `mp4导出`。
+- macOS 上会探测当前用户的 iWallpaper 缓存目录，也会扫描当前用户 `~/Library/Containers/*/Data/Documents` 里符合 `Videos/` + `DesktopImage/`/`Images/`/`screen` 结构的缓存目录。
+- 没有探测到来源时，来源输入框会保持空白，用户通过“选择文件夹”或“选择文件”选择即可。
+
+示例：
+
+```bash
+WALLPAPER_MP4_EXPORTER_SOURCE="/path/to/cache-or-media" \
+WALLPAPER_MP4_EXPORTER_OUTPUT="$HOME/Downloads/mp4导出" \
+wallpaper-mp4-exporter web --open
+```
 
 ## CLI
 

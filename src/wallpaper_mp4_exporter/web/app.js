@@ -119,6 +119,9 @@ async function loadDefaults() {
     if (!outputInput.value && defaults.output) {
       outputInput.value = defaults.output;
     }
+    if (!sourceInput.value && !defaults.source && !logOutput.dataset.dirty) {
+      logOutput.textContent = t('noDefaultSource');
+    }
   } catch (_error) {
     if (!outputInput.value) {
       outputInput.value = 'exports';

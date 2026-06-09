@@ -14,6 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from ..environment import default_paths
 from ..exporter import ExportOptions, doctor, export_wallpapers, parse_aes_key, scan_candidates
 
 
@@ -254,26 +255,6 @@ def run_server(host: str = "127.0.0.1", port: int = 8765, open_browser: bool = F
         print()
     finally:
         httpd.server_close()
-
-
-def default_paths() -> dict[str, str]:
-    home = Path.home()
-    source = default_source_path(home)
-    output = home / "Downloads" / "mp4导出"
-    return {
-        "source": str(source) if source else "",
-        "output": str(output),
-    }
-
-
-def default_source_path(home: Path) -> Path | None:
-    candidates = [
-        home / "Library" / "Containers" / "com.macosgame.iwallpaper" / "Data" / "Documents",
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
-    return None
 
 
 def picker_prompt(kind: str, locale: str) -> str:
