@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wallpaper-mp4-exporter"
+version = "0.1.0"
+description = "A local CLI and web UI for exporting wallpaper caches or media folders to playable MP4 files."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "Wallpaper MP4 Exporter contributors" }
+]
+keywords = ["wallpaper", "mp4", "ffmpeg", "converter", "live-wallpaper"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Environment :: Web Environment",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Video :: Conversion",
+]
+dependencies = []
+
+[project.optional-dependencies]
+aes = ["cryptography>=41"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+wallpaper-mp4-exporter = "wallpaper_mp4_exporter.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wallpaper_mp4_exporter"]

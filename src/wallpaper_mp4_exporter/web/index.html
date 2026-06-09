@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wallpaper MP4 Exporter</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <h1 data-i18n="appTitle">Wallpaper MP4 Exporter</h1>
+      <div class="header-actions">
+        <label class="language-label" for="languagePicker" data-i18n="language">Language</label>
+        <select class="language-picker" id="languagePicker" aria-label="Language">
+          <option value="en">English</option>
+          <option value="zh-CN">简体中文</option>
+        </select>
+        <div class="status" id="doctorStatus"><span class="dot"></span><span data-i18n="checkingTools">Checking tools</span></div>
+      </div>
+    </header>
+
+    <aside>
+      <form id="exportForm">
+        <div class="field">
+          <label for="source" data-i18n="sourcePath">Source file or folder</label>
+          <input id="source" name="source" type="text" autocomplete="off" data-i18n-placeholder="sourcePlaceholder" placeholder="/path/to/cache-or-media-folder" required>
+          <div class="path-actions">
+            <button type="button" id="pickSourceFolder" data-i18n="chooseFolder">Choose folder</button>
+            <button type="button" id="pickSourceFile" data-i18n="chooseFile">Choose file</button>
+          </div>
+          <p class="hint" data-i18n="sourceHelp">This is where the app reads from: choose a wallpaper cache folder, media folder, or a single video file.</p>
+        </div>
+        <div class="field">
+          <label for="output" data-i18n="outputPath">Output path</label>
+          <input id="output" name="output" type="text" autocomplete="off" required>
+          <div class="output-actions">
+            <button type="button" id="pickOutputFolder" data-i18n="chooseOutput">Choose output folder</button>
+          </div>
+          <p class="hint" data-i18n="outputHelp">Exported MP4 files, covers, manifest.json, and preview.html will be saved here.</p>
+        </div>
+        <div class="row options-row">
+          <div class="field">
+            <label for="profile" data-i18n="profile">Read mode</label>
+            <select id="profile" name="profile">
+              <option value="auto" data-i18n="autoRecommended">Auto (recommended)</option>
+              <option value="plain" data-i18n="plainMedia">Plain media</option>
+              <option value="aes-ecb" data-i18n="manualEncryptedCache">Manual encrypted cache</option>
+              <option value="iwallpaper" data-i18n="iwallpaperCache">iWallpaper cache</option>
+            </select>
+            <p class="hint" data-i18n="profileHelp">Auto is recommended. The app will try normal media first, then known supported encrypted cache profiles.</p>
+          </div>
+          <div class="field">
+            <label for="layout" data-i18n="layout">Folder structure</label>
+            <select id="layout" name="layout">
+              <option value="auto" data-i18n="autoRecommended">Auto (recommended)</option>
+              <option value="generic" data-i18n="genericFolder">Normal folder</option>
+              <option value="iwallpaper" data-i18n="iwallpaperCacheLayout">iWallpaper-style cache</option>
+            </select>
+            <p class="hint" data-i18n="layoutHelp">Auto detects common cache folders. Generic scans ordinary folders recursively.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="compatibility" data-i18n="compatibility">Playback compatibility</label>
+            <select id="compatibility" name="compatibility">
+              <option value="universal" data-i18n="universalFriendly">Best compatibility MP4</option>
+              <option value="mac" data-i18n="macFast">Mac fast package</option>
+              <option value="copy" data-i18n="copyOriginal">Keep original streams</option>
+            </select>
+            <p class="hint" data-i18n="compatibilityHelp">Best compatibility is recommended for using the MP4 as wallpaper or playing it on more devices.</p>
+          </div>
+          <div class="field">
+            <label for="limit" data-i18n="limit">Limit</label>
+            <input id="limit" name="limit" type="number" min="0" step="1" value="0">
+            <p class="hint" data-i18n="limitHelp">Maximum number to export. 0 means export everything. Use 1 or 2 for a quick test run.</p>
+          </div>
+        </div>
+        <details class="advanced-options">
+          <summary data-i18n="advancedOptions">Advanced options</summary>
+          <div class="advanced-body">
+            <div class="field">
+              <label for="key" data-i18n="aesKey">Encryption key</label>
+              <input id="key" name="key" type="password" autocomplete="off" data-i18n-placeholder="aesPlaceholder" placeholder="text:, hex:, base64:, or raw text">
+              <p class="hint" data-i18n="aesHelp">Usually leave this empty. Auto mode already handles known supported encrypted caches. Fill it only for unknown AES-ECB caches.</p>
+            </div>
+          </div>
+        </details>
+        <label class="check-row" for="overwrite">
+          <input id="overwrite" name="overwrite" type="checkbox" checked>
+          <span data-i18n="overwrite">Overwrite existing MP4 files</span>
+        </label>
+        <div class="actions">
+          <button type="button" id="scanButton" data-i18n="scan">Scan</button>
+          <button type="submit" class="primary" id="exportButton" data-i18n="exportMp4">Export MP4</button>
+        </div>
+      </form>
+    </aside>
+
+    <main>
+      <div class="grid">
+        <section class="panel" aria-labelledby="previewTitle">
+          <div class="panel-head">
+            <h2 id="previewTitle" data-i18n="preview">Preview</h2>
+            <span class="count" id="previewCount"></span>
+          </div>
+          <div class="panel-body preview">
+            <video id="videoPreview" controls muted loop playsinline></video>
+            <div class="preview-tools">
+              <label for="exportedPicker" data-i18n="exportedVideo">Exported video</label>
+              <select id="exportedPicker" disabled></select>
+              <div id="previewPath" class="empty"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="logTitle">
+          <div class="panel-head">
+            <h2 id="logTitle" data-i18n="log">Log</h2>
+            <span class="count" id="jobState"></span>
+          </div>
+          <div class="panel-body">
+            <pre id="logOutput"></pre>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="scanTitle">
+          <div class="panel-head">
+            <h2 id="scanTitle" data-i18n="files">Files</h2>
+            <span class="count" id="fileCount"></span>
+          </div>
+          <div class="panel-body" id="fileTable"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/api.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
