@@ -14,9 +14,11 @@
   --shadow: 0 12px 30px rgba(28, 39, 49, .08);
 }
 * { box-sizing: border-box; }
+html { height: 100%; }
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
   background: var(--bg);
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -36,7 +38,9 @@ a:focus-visible {
 .shell {
   display: grid;
   grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-  min-height: 100vh;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100vh;
+  overflow: hidden;
 }
 header {
   grid-column: 1 / -1;
@@ -94,20 +98,28 @@ select.language-picker {
 }
 .dot.ok { background: var(--green); }
 .dot.bad { background: var(--red); }
-aside, main { padding: 24px; }
+aside, main {
+  min-height: 0;
+  padding: 24px;
+}
 aside {
+  grid-column: 1;
+  grid-row: 2;
+  overflow: hidden;
+  padding-top: 20px;
+  padding-bottom: 20px;
   border-right: 1px solid var(--line);
   background: var(--surface);
 }
-main { min-width: 0; }
-form, .grid, .preview-tools { display: grid; gap: 16px; }
-.field { display: grid; gap: 7px; }
-.hint {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.45;
+main {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  overflow-y: auto;
 }
+form { display: grid; gap: 12px; }
+.preview-tools { display: grid; gap: 16px; }
+.field { display: grid; gap: 6px; }
 .path-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -122,6 +134,30 @@ label {
   color: var(--muted);
   font-size: 13px;
   font-weight: 700;
+}
+.label-with-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.help-icon {
+  width: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--blue);
+  background: rgba(36, 107, 254, .08);
+  border-color: rgba(36, 107, 254, .26);
+  font-size: 13px;
+  line-height: 1;
+}
+.help-icon:hover {
+  color: #fff;
+  background: var(--blue);
 }
 input[type="text"],
 input[type="password"],
@@ -146,18 +182,13 @@ input[type="checkbox"] {
   gap: 12px;
   align-items: start;
 }
-.options-row > .field {
+.row > .field {
   min-width: 0;
-  grid-template-rows: auto 44px 1fr;
+  grid-template-rows: auto 44px;
   align-content: start;
 }
-.options-row label {
-  min-height: 36px;
-  display: flex;
-  align-items: flex-end;
-}
-.options-row select,
-.options-row input[type="number"] {
+.row select,
+.row input[type="number"] {
   height: 44px;
 }
 .check-row {
@@ -210,6 +241,36 @@ button:disabled {
   cursor: not-allowed;
   opacity: .62;
 }
+.tabs {
+  position: sticky;
+  top: -24px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  margin: -24px -24px 18px;
+  padding: 16px 24px 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(246, 248, 251, .96);
+  backdrop-filter: blur(12px);
+}
+.tab-button {
+  min-width: 108px;
+  min-height: 40px;
+  border-radius: 6px;
+}
+.tab-button.active {
+  color: #fff;
+  border-color: var(--blue);
+  background: var(--blue);
+}
+.tab-panel {
+  display: grid;
+  gap: 16px;
+}
+.tab-panel[hidden] { display: none; }
+.log-grid {
+  grid-template-rows: auto auto;
+}
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -252,7 +313,7 @@ video {
 }
 pre {
   min-height: 220px;
-  max-height: 380px;
+  max-height: 420px;
   overflow: auto;
   margin: 0;
   padding: 14px;
@@ -301,11 +362,30 @@ td.path {
 }
 .link-path:hover { text-decoration: underline; }
 @media (max-width: 1060px) {
-  .shell { grid-template-columns: 1fr; }
+  body {
+    height: auto;
+    overflow: auto;
+  }
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
   aside {
+    grid-column: 1;
+    grid-row: 2;
+    overflow: visible;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
+  main {
+    grid-column: 1;
+    grid-row: 3;
+    overflow: visible;
+  }
+  .tabs { top: 0; }
   .preview { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
@@ -316,7 +396,11 @@ td.path {
   }
   .row, .actions { grid-template-columns: 1fr; }
   .path-actions { grid-template-columns: 1fr; }
-  .options-row label { min-height: 0; }
+  .tabs {
+    margin: -16px -16px 16px;
+    padding: 12px 16px;
+  }
+  .tab-button { min-width: 0; flex: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

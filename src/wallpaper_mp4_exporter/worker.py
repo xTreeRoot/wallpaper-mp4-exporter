@@ -7,7 +7,7 @@ from .media import ffprobe, remux_or_transcode, sha256
 from .messages import failure_message, skip_message, wrote_message
 from .models import Candidate, ExportOptions, ProbeInfo, Progress
 from .profiles import prepare_media_input
-from .scanner import copy_cover
+from .scanner import candidate_filename_stem, copy_cover
 
 
 def export_candidate(
@@ -21,14 +21,16 @@ def export_candidate(
     emit: Progress,
     zh: bool,
 ) -> dict[str, Any]:
-    out_mp4 = videos_output / f"{candidate.id}.mp4"
-    tmp_media = tmp_parent / f"{candidate.id}{candidate.video.suffix.lower() or '.mp4'}"
-    emit(f"[{index}/{total}] {candidate.video.name}", {"type": "item", "id": candidate.id})
+    output_stem = candidate_filename_stem(candidate)
+    out_mp4 = videos_output / f"{output_stem}.mp4"
+    tmp_media = tmp_parent / f"{output_stem}{candidate.video.suffix.lower() or '.mp4'}"
+    display_name = candidate.title or candidate.video.name
+    emit(f"[{index}/{total}] {display_name}", {"type": "item", "id": candidate.id, "title": candidate.title})
 
     try:
         if out_mp4.exists() and not options.overwrite:
             entry = existing_entry(candidate, out_mp4, covers_output, options.overwrite)
-            emit(skip_message(out_mp4.name, zh), {"type": "skipped", "id": candidate.id})
+            emit(skip_message(out_mp4.name, zh), {"type": "skipped", "entry": entry})
             return entry
 
         prepared, encryption = prepare_media_input(candidate.video, tmp_media, options)
@@ -38,6 +40,7 @@ def export_candidate(
         cover_path = copy_cover(candidate, covers_output, options.overwrite)
         entry = {
             "id": candidate.id,
+            "title": candidate.title,
             "status": "exported",
             "current": candidate.current,
             "source_video": str(candidate.video),
@@ -53,7 +56,13 @@ def export_candidate(
         emit(wrote_message(out_mp4.name, mode, zh), {"type": "exported", "entry": entry})
         return entry
     except Exception as exc:
-        failure = {"id": candidate.id, "status": "failed", "source_video": str(candidate.video), "error": str(exc)}
+        failure = {
+            "id": candidate.id,
+            "title": candidate.title,
+            "status": "failed",
+            "source_video": str(candidate.video),
+            "error": str(exc),
+        }
         emit(failure_message(exc, zh), {"type": "failure", "failure": failure})
         return failure
     finally:
@@ -69,6 +78,7 @@ def existing_entry(candidate: Candidate, out_mp4: Path, covers_output: Path, ove
     cover_path = copy_cover(candidate, covers_output, overwrite)
     return {
         "id": candidate.id,
+        "title": candidate.title,
         "status": "exists",
         "current": candidate.current,
         "source_video": str(candidate.video),

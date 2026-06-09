@@ -18,6 +18,7 @@
     en: {
       appTitle: 'Wallpaper MP4 Exporter',
       language: 'Language',
+      help: 'Help',
       checkingTools: 'Checking tools',
       sourcePath: 'Source file or folder',
       sourcePlaceholder: '/path/to/cache-or-media-folder',
@@ -69,6 +70,7 @@
       emptyScan: 'Scan a source path to list matching files.',
       noMatches: 'No matching video files.',
       video: 'Video',
+      name: 'Name',
       cover: 'Cover',
       current: 'Current',
       yes: 'Yes',
@@ -94,6 +96,7 @@
     'zh-CN': {
       appTitle: '壁纸 MP4 导出器',
       language: '语言',
+      help: '帮助',
       checkingTools: '正在检查依赖',
       sourcePath: '来源文件/文件夹',
       sourcePlaceholder: '选择壁纸缓存目录、媒体目录或单个视频文件',
@@ -146,6 +149,7 @@
       emptyScan: '扫描源路径后会在这里列出匹配文件。',
       noMatches: '没有找到匹配的视频文件。',
       video: '视频',
+      name: '名称',
       cover: '封面',
       current: '当前使用',
       yes: '是',

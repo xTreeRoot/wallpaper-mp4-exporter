@@ -17,6 +17,7 @@ def create_preview_html(output: Path, entries: list[dict[str, Any]], locale: str
         "select": "已导出视频" if zh else "Exported video",
         "badge": f"{len(playable)} 个 MP4 文件" if zh else f"{len(playable)} MP4 file(s)",
         "id": "ID",
+        "name": "名称" if zh else "Name",
         "mode": "模式" if zh else "Mode",
         "codec": "编码" if zh else "Codec",
         "size": "尺寸" if zh else "Size",
@@ -38,12 +39,13 @@ def create_preview_html(output: Path, entries: list[dict[str, Any]], locale: str
         f'        <option value="{html.escape(rel(entry["output_video"]))}" '
         f'data-cover="{html.escape(rel(entry.get("cover")))}"'
         f'{" selected" if entry["id"] == preferred["id"] else ""}>'
-        f'{html.escape(entry["id"])}</option>'
+        f'{html.escape(entry.get("title") or entry["id"])}</option>'
         for entry in playable
     )
     rows = "\n".join(
         "          <tr>"
         f"<td>{html.escape(entry['id'])}</td>"
+        f"<td>{html.escape(entry.get('title') or '')}</td>"
         f"<td>{html.escape(entry.get('mode') or '')}</td>"
         f"<td>{html.escape(entry.get('video_codec') or '')}</td>"
         f"<td>{html.escape(str(entry.get('width') or ''))}x{html.escape(str(entry.get('height') or ''))}</td>"
@@ -171,7 +173,7 @@ def create_preview_html(output: Path, entries: list[dict[str, Any]], locale: str
       <span class="badge">{html.escape(text['badge'])}</span>
       <table>
         <thead>
-          <tr><th>{html.escape(text['id'])}</th><th>{html.escape(text['mode'])}</th><th>{html.escape(text['codec'])}</th><th>{html.escape(text['size'])}</th><th>{html.escape(text['seconds'])}</th></tr>
+          <tr><th>{html.escape(text['id'])}</th><th>{html.escape(text['name'])}</th><th>{html.escape(text['mode'])}</th><th>{html.escape(text['codec'])}</th><th>{html.escape(text['size'])}</th><th>{html.escape(text['seconds'])}</th></tr>
         </thead>
         <tbody>
 {rows}

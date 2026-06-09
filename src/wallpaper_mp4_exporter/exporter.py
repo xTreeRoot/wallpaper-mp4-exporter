@@ -11,6 +11,7 @@ from .manifest import write_manifest
 from .media import can_probe, doctor, ffprobe, remux_or_transcode, require_tool, run, sha256, transcode
 from .messages import done_message, is_zh, scan_message
 from .models import Candidate, ExportOptions, ExportResult, ProbeInfo, Progress
+from .parallel import MAX_EXPORT_THREADS, export_candidates_parallel, export_thread_count
 from .preview import create_preview_html
 from .profiles import prepare_media_input
 from .scanner import (
@@ -18,6 +19,7 @@ from .scanner import (
     UUID_RE,
     VIDEO_EXTENSIONS,
     copy_cover,
+    candidate_filename_stem,
     extract_current_ids,
     find_cover,
     find_cover_by_stem,
@@ -26,7 +28,6 @@ from .scanner import (
     safe_id,
     scan_candidates,
 )
-from .worker import export_candidate
 
 
 VALID_PROFILES = {"auto", "plain", "aes-ecb", "aes-128-ecb", "iwallpaper"}
@@ -58,22 +59,15 @@ def export_wallpapers(options: ExportOptions, progress: Progress | None = None) 
     emit(scan_message(scan["layout"], len(candidates), zh), {"type": "scan", **scan})
 
     try:
-        for index, candidate in enumerate(candidates, start=1):
-            entry = export_candidate(
-                candidate=candidate,
-                index=index,
-                total=len(candidates),
-                options=options,
-                videos_output=videos_output,
-                covers_output=covers_output,
-                tmp_parent=tmp_parent,
-                emit=emit,
-                zh=zh,
-            )
-            if entry["status"] == "failed":
-                failures.append(entry)
-            else:
-                entries.append(entry)
+        entries, failures = export_candidates_parallel(
+            candidates=candidates,
+            options=options,
+            videos_output=videos_output,
+            covers_output=covers_output,
+            tmp_parent=tmp_parent,
+            emit=emit,
+            zh=zh,
+        )
     finally:
         if not options.keep_temp:
             shutil.rmtree(tmp_parent, ignore_errors=True)
@@ -119,6 +113,7 @@ def candidates_from_scan(scan: dict[str, Any]) -> list[Candidate]:
             video=Path(item["video"]),
             cover=Path(item["cover"]) if item.get("cover") else None,
             current=bool(item.get("current")),
+            title=item.get("title") or None,
         )
         for item in scan["candidates"]
     ]
@@ -130,16 +125,19 @@ __all__ = [
     "ExportOptions",
     "ExportResult",
     "IWALLPAPER_AES_KEY",
+    "MAX_EXPORT_THREADS",
     "ProbeInfo",
     "Progress",
     "UUID_RE",
     "VIDEO_EXTENSIONS",
     "can_probe",
+    "candidate_filename_stem",
     "copy_cover",
     "create_preview_html",
     "decrypt_aes_ecb",
     "doctor",
     "export_wallpapers",
+    "export_thread_count",
     "extract_current_ids",
     "ffprobe",
     "find_cover",

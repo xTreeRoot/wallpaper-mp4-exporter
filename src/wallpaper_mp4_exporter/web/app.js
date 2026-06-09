@@ -6,6 +6,7 @@ let currentLocale = normalizeLocale(i18n.initialLocale);
 let lastRenderedFiles = [];
 let lastResult = null;
 let lastDoctorState = 'checking';
+let lastRenderedEntryCount = 0;
 
 const form = document.getElementById('exportForm');
 const sourceInput = document.getElementById('source');
@@ -25,6 +26,8 @@ const exportedPicker = document.getElementById('exportedPicker');
 const previewCount = document.getElementById('previewCount');
 const previewPath = document.getElementById('previewPath');
 const languagePicker = document.getElementById('languagePicker');
+const tabButtons = Array.from(document.querySelectorAll('[data-tab-target]'));
+const tabPanels = Array.from(document.querySelectorAll('.tab-panel'));
 
 
 function t(key, values = {}) {
@@ -41,6 +44,11 @@ function setLocale(locale, options = {}) {
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
     element.placeholder = t(element.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-tooltip-i18n]').forEach(element => {
+    const text = t(element.dataset.tooltipI18n);
+    element.title = text;
+    element.setAttribute('aria-label', `${t('help')}: ${text}`);
   });
   languagePicker.setAttribute('aria-label', t('language'));
   previewCount.textContent = lastResult ? t('exportedCount', { count: exportedPicker.options.length }) : t('noExportedVideo');
@@ -61,6 +69,20 @@ function setLocale(locale, options = {}) {
       history.replaceState(null, '', nextPath);
     }
   }
+}
+
+function setActiveTab(panelId) {
+  tabButtons.forEach(button => {
+    const active = button.dataset.tabTarget === panelId;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+    button.tabIndex = active ? 0 : -1;
+  });
+  tabPanels.forEach(panel => {
+    const active = panel.id === panelId;
+    panel.hidden = !active;
+    panel.classList.toggle('active', active);
+  });
 }
 
 function initLocale() {
@@ -139,12 +161,13 @@ function renderFiles(items) {
   fileTable.innerHTML = `
     <table>
       <thead>
-        <tr><th>ID</th><th>${escapeHtml(t('video'))}</th><th>${escapeHtml(t('cover'))}</th><th>${escapeHtml(t('current'))}</th></tr>
+        <tr><th>ID</th><th>${escapeHtml(t('name'))}</th><th>${escapeHtml(t('video'))}</th><th>${escapeHtml(t('cover'))}</th><th>${escapeHtml(t('current'))}</th></tr>
       </thead>
       <tbody>
         ${lastRenderedFiles.map(item => `
           <tr>
             <td>${escapeHtml(item.id)}</td>
+            <td>${escapeHtml(item.title || '')}</td>
             <td class="path">${escapeHtml(item.video)}</td>
             <td class="path">${escapeHtml(item.cover || '')}</td>
             <td>${item.current ? escapeHtml(t('yes')) : ''}</td>
@@ -155,24 +178,33 @@ function renderFiles(items) {
   `;
 }
 
-function renderResult(result) {
+function renderResult(result, options = {}) {
   lastResult = result;
   const entries = (result && result.entries) || [];
   const playable = entries.filter(entry => entry.output_video);
+  const previousValue = exportedPicker.value;
+  let selectedValue = '';
+  if (options.selectLatest && playable.length) {
+    selectedValue = playable[playable.length - 1].output_video;
+  } else if (playable.some(entry => entry.output_video === previousValue)) {
+    selectedValue = previousValue;
+  } else {
+    const preferred = playable.find(entry => entry.current) || playable[0];
+    selectedValue = preferred ? preferred.output_video : '';
+  }
+
   exportedPicker.innerHTML = '';
   exportedPicker.disabled = playable.length === 0;
   previewCount.textContent = t('exportedCount', { count: playable.length });
 
-  playable.forEach((entry, index) => {
+  playable.forEach(entry => {
     const option = document.createElement('option');
     option.value = entry.output_video;
     option.dataset.cover = entry.cover || '';
-    option.textContent = `${entry.id} · ${entry.video_codec || t('fallbackVideo')}`;
+    option.textContent = `${entry.title || entry.id} · ${entry.video_codec || t('fallbackVideo')}`;
     exportedPicker.appendChild(option);
-    if (index === 0 || entry.current) {
-      exportedPicker.value = entry.output_video;
-    }
   });
+  exportedPicker.value = selectedValue;
   updatePreview();
 
   if (result && result.preview_path) {
@@ -183,6 +215,7 @@ function renderResult(result) {
 
   renderFiles(entries.map(entry => ({
     id: entry.id,
+    title: entry.title,
     video: entry.output_video,
     cover: entry.cover,
     current: entry.current
@@ -197,13 +230,16 @@ function updatePreview() {
     videoPreview.load();
     return;
   }
-  videoPreview.src = mediaUrl(option.value);
+  const nextSrc = mediaUrl(option.value);
   if (option.dataset.cover) {
     videoPreview.poster = mediaUrl(option.dataset.cover);
   } else {
     videoPreview.removeAttribute('poster');
   }
-  videoPreview.load();
+  if (videoPreview.getAttribute('src') !== nextSrc) {
+    videoPreview.src = nextSrc;
+    videoPreview.load();
+  }
 }
 
 async function checkDoctor() {
@@ -235,6 +271,7 @@ function renderDoctorStatus() {
 
 async function scanSource() {
   scanButton.disabled = true;
+  setActiveTab('logPanel');
   setLog(t('scanning'));
   try {
     const payload = formPayload();
@@ -259,6 +296,9 @@ async function startExport(event) {
   event.preventDefault();
   exportButton.disabled = true;
   scanButton.disabled = true;
+  lastResult = null;
+  lastRenderedEntryCount = 0;
+  setActiveTab('logPanel');
   jobState.dataset.state = 'starting';
   jobState.textContent = t('starting');
   setLog(t('startingExport'));
@@ -284,8 +324,15 @@ async function pollJob(jobId) {
     jobState.dataset.state = job.status;
     jobState.textContent = translateJobState(job.status);
     setLog(job.logs || []);
+    const entryCount = resultEntryCount(job.result);
+    if (entryCount > 0) {
+      renderResult(job.result, { selectLatest: entryCount !== lastRenderedEntryCount });
+      lastRenderedEntryCount = entryCount;
+    }
     if (job.status === 'done' || job.status === 'done-with-failures') {
       renderResult(job.result);
+      lastRenderedEntryCount = resultEntryCount(job.result);
+      setActiveTab('previewPanel');
       return;
     }
     if (job.status === 'failed') {
@@ -293,6 +340,10 @@ async function pollJob(jobId) {
     }
     await new Promise(resolve => setTimeout(resolve, 850));
   }
+}
+
+function resultEntryCount(result) {
+  return ((result && result.entries) || []).filter(entry => entry.output_video).length;
 }
 
 function translateJobState(status) {
@@ -321,6 +372,7 @@ function escapeAttribute(value) {
 scanButton.addEventListener('click', scanSource);
 form.addEventListener('submit', startExport);
 exportedPicker.addEventListener('change', updatePreview);
+tabButtons.forEach(button => button.addEventListener('click', () => setActiveTab(button.dataset.tabTarget)));
 pickSourceFolder.addEventListener('click', () => pickPath('directory', sourceInput));
 pickSourceFile.addEventListener('click', () => pickPath('file', sourceInput));
 pickOutputFolder.addEventListener('click', () => pickPath('output', outputInput));

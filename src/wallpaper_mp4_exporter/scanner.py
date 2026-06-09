@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from .metadata import load_title_map
 from .models import Candidate
 
 
@@ -17,8 +18,28 @@ UUID_RE = re.compile(
 
 
 def safe_id(text: str) -> str:
-    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "-", text).strip(".-")
-    return cleaned or "wallpaper"
+    return safe_filename_part(text)
+
+
+def safe_filename_part(text: str, fallback: str = "wallpaper", max_length: int = 96) -> str:
+    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]+', "-", str(text))
+    cleaned = re.sub(r"[^\w. -]+", "-", cleaned, flags=re.UNICODE)
+    cleaned = re.sub(r"\s+", "-", cleaned, flags=re.UNICODE)
+    cleaned = re.sub(r"-{2,}", "-", cleaned).strip(" .-_")
+    if len(cleaned) > max_length:
+        cleaned = cleaned[:max_length].strip(" .-_")
+    return cleaned or fallback
+
+
+def candidate_filename_stem(candidate: Candidate) -> str:
+    id_part = safe_filename_part(candidate.id)
+    if not candidate.title:
+        return id_part
+
+    title_part = safe_filename_part(candidate.title)
+    if title_part.lower() == id_part.lower():
+        return id_part
+    return f"{title_part}-{id_part}"
 
 
 def infer_layout(source: Path, requested: str) -> str:
@@ -111,6 +132,7 @@ def scan_candidates(source: Path, layout: str = "auto", limit: int = 0) -> dict[
 
     current_ids = extract_current_ids(source) if effective_layout == "iwallpaper" and source.is_dir() else []
     current_set = set(current_ids)
+    title_map = load_title_map(source, effective_layout)
     used_ids: dict[str, int] = {}
     candidates: list[Candidate] = []
 
@@ -125,6 +147,7 @@ def scan_candidates(source: Path, layout: str = "auto", limit: int = 0) -> dict[
                 video=path,
                 cover=find_cover(source, path, effective_layout),
                 current=path.stem.upper() in current_set,
+                title=title_map.get(path.stem.upper()),
             )
         )
 
@@ -140,7 +163,7 @@ def copy_cover(candidate: Candidate, covers_output: Path, overwrite: bool) -> st
     if not candidate.cover or not candidate.cover.exists():
         return None
 
-    dst = covers_output / f"{candidate.id}{candidate.cover.suffix.lower()}"
+    dst = covers_output / f"{candidate_filename_stem(candidate)}{candidate.cover.suffix.lower()}"
     if overwrite or not dst.exists():
         shutil.copy2(candidate.cover, dst)
     return str(dst)

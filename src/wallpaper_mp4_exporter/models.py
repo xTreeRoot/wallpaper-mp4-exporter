@@ -32,10 +32,12 @@ class Candidate:
     video: Path
     cover: Path | None
     current: bool
+    title: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
+            "title": self.title,
             "video": str(self.video),
             "cover": str(self.cover) if self.cover else None,
             "current": self.current,

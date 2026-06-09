@@ -8,6 +8,7 @@ import threading
 import time
 import uuid
 import webbrowser
+from copy import deepcopy
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -43,12 +44,30 @@ class Job:
     def append(self, message: str) -> None:
         self.logs.append(message)
 
+    def begin_result(self, output: Path) -> None:
+        self.result = {
+            "manifest_path": None,
+            "preview_path": None,
+            "output": str(output.expanduser().resolve()),
+            "entries": [],
+            "failures": [],
+        }
+
+    def record_event(self, event: dict | None) -> None:
+        if not event or not self.result:
+            return
+        event_type = event.get("type")
+        if event_type in {"exported", "skipped"} and event.get("entry"):
+            self.result["entries"].append(event["entry"])
+        elif event_type == "failure" and event.get("failure"):
+            self.result["failures"].append(event["failure"])
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
             "status": self.status,
-            "logs": self.logs,
-            "result": self.result,
+            "logs": list(self.logs),
+            "result": deepcopy(self.result),
             "error": self.error,
             "started_at": self.started_at,
             "finished_at": self.finished_at,
@@ -146,19 +165,26 @@ class RequestHandler(BaseHTTPRequestHandler):
                     limit=int(payload.get("limit") or 0),
                     locale=str(payload.get("locale") or "en"),
                 )
+                with JOBS_LOCK:
+                    job.begin_result(options.output)
 
                 def progress(message: str, _event: dict | None = None) -> None:
-                    job.append(message)
+                    with JOBS_LOCK:
+                        job.append(message)
+                        job.record_event(_event)
 
                 result = export_wallpapers(options, progress=progress)
-                job.status = "done" if not result.failures else "done-with-failures"
-                job.result = result.to_dict()
+                with JOBS_LOCK:
+                    job.status = "done" if not result.failures else "done-with-failures"
+                    job.result = result.to_dict()
             except Exception as exc:
-                job.status = "failed"
-                job.error = str(exc)
-                job.append(f"failed: {exc}")
+                with JOBS_LOCK:
+                    job.status = "failed"
+                    job.error = str(exc)
+                    job.append(f"failed: {exc}")
             finally:
-                job.finished_at = time.time()
+                with JOBS_LOCK:
+                    job.finished_at = time.time()
 
         thread = threading.Thread(target=runner, name=f"export-{job.id}", daemon=True)
         thread.start()

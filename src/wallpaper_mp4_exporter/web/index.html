@@ -24,66 +24,80 @@
     <aside>
       <form id="exportForm">
         <div class="field">
-          <label for="source" data-i18n="sourcePath">Source file or folder</label>
+          <div class="label-with-help">
+            <label for="source" data-i18n="sourcePath">Source file or folder</label>
+            <button type="button" class="help-icon" data-tooltip-i18n="sourceHelp" aria-label="Source help">?</button>
+          </div>
           <input id="source" name="source" type="text" autocomplete="off" data-i18n-placeholder="sourcePlaceholder" placeholder="/path/to/cache-or-media-folder" required>
           <div class="path-actions">
             <button type="button" id="pickSourceFolder" data-i18n="chooseFolder">Choose folder</button>
             <button type="button" id="pickSourceFile" data-i18n="chooseFile">Choose file</button>
           </div>
-          <p class="hint" data-i18n="sourceHelp">This is where the app reads from: choose a wallpaper cache folder, media folder, or a single video file.</p>
         </div>
         <div class="field">
-          <label for="output" data-i18n="outputPath">Output path</label>
+          <div class="label-with-help">
+            <label for="output" data-i18n="outputPath">Output path</label>
+            <button type="button" class="help-icon" data-tooltip-i18n="outputHelp" aria-label="Output help">?</button>
+          </div>
           <input id="output" name="output" type="text" autocomplete="off" required>
           <div class="output-actions">
             <button type="button" id="pickOutputFolder" data-i18n="chooseOutput">Choose output folder</button>
           </div>
-          <p class="hint" data-i18n="outputHelp">Exported MP4 files, covers, manifest.json, and preview.html will be saved here.</p>
         </div>
         <div class="row options-row">
           <div class="field">
-            <label for="profile" data-i18n="profile">Read mode</label>
+            <div class="label-with-help">
+              <label for="profile" data-i18n="profile">Read mode</label>
+              <button type="button" class="help-icon" data-tooltip-i18n="profileHelp" aria-label="Read mode help">?</button>
+            </div>
             <select id="profile" name="profile">
               <option value="auto" data-i18n="autoRecommended">Auto (recommended)</option>
               <option value="plain" data-i18n="plainMedia">Plain media</option>
               <option value="aes-ecb" data-i18n="manualEncryptedCache">Manual encrypted cache</option>
               <option value="iwallpaper" data-i18n="iwallpaperCache">iWallpaper cache</option>
             </select>
-            <p class="hint" data-i18n="profileHelp">Auto is recommended. The app will try normal media first, then known supported encrypted cache profiles.</p>
           </div>
           <div class="field">
-            <label for="layout" data-i18n="layout">Folder structure</label>
+            <div class="label-with-help">
+              <label for="layout" data-i18n="layout">Folder structure</label>
+              <button type="button" class="help-icon" data-tooltip-i18n="layoutHelp" aria-label="Folder structure help">?</button>
+            </div>
             <select id="layout" name="layout">
               <option value="auto" data-i18n="autoRecommended">Auto (recommended)</option>
               <option value="generic" data-i18n="genericFolder">Normal folder</option>
               <option value="iwallpaper" data-i18n="iwallpaperCacheLayout">iWallpaper-style cache</option>
             </select>
-            <p class="hint" data-i18n="layoutHelp">Auto detects common cache folders. Generic scans ordinary folders recursively.</p>
           </div>
         </div>
         <div class="row">
           <div class="field">
-            <label for="compatibility" data-i18n="compatibility">Playback compatibility</label>
+            <div class="label-with-help">
+              <label for="compatibility" data-i18n="compatibility">Playback compatibility</label>
+              <button type="button" class="help-icon" data-tooltip-i18n="compatibilityHelp" aria-label="Playback compatibility help">?</button>
+            </div>
             <select id="compatibility" name="compatibility">
               <option value="universal" data-i18n="universalFriendly">Best compatibility MP4</option>
               <option value="mac" data-i18n="macFast">Mac fast package</option>
               <option value="copy" data-i18n="copyOriginal">Keep original streams</option>
             </select>
-            <p class="hint" data-i18n="compatibilityHelp">Best compatibility is recommended for using the MP4 as wallpaper or playing it on more devices.</p>
           </div>
           <div class="field">
-            <label for="limit" data-i18n="limit">Limit</label>
+            <div class="label-with-help">
+              <label for="limit" data-i18n="limit">Limit</label>
+              <button type="button" class="help-icon" data-tooltip-i18n="limitHelp" aria-label="Limit help">?</button>
+            </div>
             <input id="limit" name="limit" type="number" min="0" step="1" value="0">
-            <p class="hint" data-i18n="limitHelp">Maximum number to export. 0 means export everything. Use 1 or 2 for a quick test run.</p>
           </div>
         </div>
         <details class="advanced-options">
           <summary data-i18n="advancedOptions">Advanced options</summary>
           <div class="advanced-body">
             <div class="field">
-              <label for="key" data-i18n="aesKey">Encryption key</label>
+              <div class="label-with-help">
+                <label for="key" data-i18n="aesKey">Encryption key</label>
+                <button type="button" class="help-icon" data-tooltip-i18n="aesHelp" aria-label="Encryption key help">?</button>
+              </div>
               <input id="key" name="key" type="password" autocomplete="off" data-i18n-placeholder="aesPlaceholder" placeholder="text:, hex:, base64:, or raw text">
-              <p class="hint" data-i18n="aesHelp">Usually leave this empty. Auto mode already handles known supported encrypted caches. Fill it only for unknown AES-ECB caches.</p>
             </div>
           </div>
         </details>
@@ -99,22 +113,12 @@
     </aside>
 
     <main>
-      <div class="grid">
-        <section class="panel" aria-labelledby="previewTitle">
-          <div class="panel-head">
-            <h2 id="previewTitle" data-i18n="preview">Preview</h2>
-            <span class="count" id="previewCount"></span>
-          </div>
-          <div class="panel-body preview">
-            <video id="videoPreview" controls muted loop playsinline></video>
-            <div class="preview-tools">
-              <label for="exportedPicker" data-i18n="exportedVideo">Exported video</label>
-              <select id="exportedPicker" disabled></select>
-              <div id="previewPath" class="empty"></div>
-            </div>
-          </div>
-        </section>
+      <div class="tabs" role="tablist" aria-label="Export workspace">
+        <button type="button" class="tab-button active" id="logTab" data-tab-target="logPanel" role="tab" aria-controls="logPanel" aria-selected="true" data-i18n="log">Log</button>
+        <button type="button" class="tab-button" id="previewTab" data-tab-target="previewPanel" role="tab" aria-controls="previewPanel" aria-selected="false" data-i18n="preview">Preview</button>
+      </div>
 
+      <section class="tab-panel active log-grid" id="logPanel" role="tabpanel" aria-labelledby="logTab">
         <section class="panel" aria-labelledby="logTitle">
           <div class="panel-head">
             <h2 id="logTitle" data-i18n="log">Log</h2>
@@ -132,7 +136,24 @@
           </div>
           <div class="panel-body" id="fileTable"></div>
         </section>
-      </div>
+      </section>
+
+      <section class="tab-panel" id="previewPanel" role="tabpanel" aria-labelledby="previewTab" hidden>
+        <section class="panel" aria-labelledby="previewTitle">
+          <div class="panel-head">
+            <h2 id="previewTitle" data-i18n="preview">Preview</h2>
+            <span class="count" id="previewCount"></span>
+          </div>
+          <div class="panel-body preview">
+            <video id="videoPreview" controls muted loop playsinline></video>
+            <div class="preview-tools">
+              <label for="exportedPicker" data-i18n="exportedVideo">Exported video</label>
+              <select id="exportedPicker" disabled></select>
+              <div id="previewPath" class="empty"></div>
+            </div>
+          </div>
+        </section>
+      </section>
     </main>
   </div>
 
