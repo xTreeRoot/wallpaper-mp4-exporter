@@ -25,10 +25,12 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Topic :: Multimedia :: Video :: Conversion",
 ]
-dependencies = []
+dependencies = [
+  "cryptography>=41",
+]
 
 [project.optional-dependencies]
-aes = ["cryptography>=41"]
+aes = []
 dev = ["pytest>=8"]
 
 [project.scripts]

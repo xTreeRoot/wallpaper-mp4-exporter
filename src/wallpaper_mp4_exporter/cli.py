@@ -41,7 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     web.add_argument("--port", type=int, default=8765)
     web.add_argument("--open", action="store_true", help="Open the UI in the default browser.")
 
-    sub.add_parser("doctor", help="Check ffmpeg, ffprobe, and optional AES support.")
+    sub.add_parser("doctor", help="Check ffmpeg, ffprobe, and AES support.")
     return parser
 
 

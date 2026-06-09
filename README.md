@@ -27,7 +27,7 @@ It is intentionally not tied to one computer or one application path. You point 
 
 - Python 3.10+
 - `ffmpeg` and `ffprobe`
-- Optional: `cryptography` for AES-based profiles
+- `cryptography` for AES-based cache profiles; it is installed by default
 
 Install ffmpeg:
 
@@ -47,10 +47,8 @@ winget install Gyan.FFmpeg
 ```bash
 git clone https://github.com/your-name/wallpaper-mp4-exporter.git
 cd wallpaper-mp4-exporter
-python3 -m pip install -e ".[aes]"
+python3 -m pip install -e .
 ```
-
-If you only need plain media conversion, `python3 -m pip install -e .` is enough.
 
 ## Web UI
 

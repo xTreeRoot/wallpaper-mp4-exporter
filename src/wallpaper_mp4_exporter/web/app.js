@@ -206,7 +206,13 @@ function updatePreview() {
 async function checkDoctor() {
   try {
     const data = await api.request('/api/doctor');
-    lastDoctorState = Boolean(data.ffmpeg && data.ffprobe) ? 'ready' : 'missing';
+    if (!data.ffmpeg || !data.ffprobe) {
+      lastDoctorState = 'missing';
+    } else if (!data.cryptography) {
+      lastDoctorState = 'aes-missing';
+    } else {
+      lastDoctorState = 'ready';
+    }
   } catch (error) {
     lastDoctorState = 'failed';
   }
@@ -218,6 +224,7 @@ function renderDoctorStatus() {
     checking: { className: '', label: t('checkingTools') },
     ready: { className: 'ok', label: t('ffmpegReady') },
     missing: { className: 'bad', label: t('ffmpegMissing') },
+    'aes-missing': { className: 'bad', label: t('aesMissing') },
     failed: { className: 'bad', label: t('toolCheckFailed') }
   }[lastDoctorState];
   doctorStatus.innerHTML = `<span class="dot ${status.className}"></span><span>${escapeHtml(status.label)}</span>`;

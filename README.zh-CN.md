@@ -27,7 +27,7 @@
 
 - Python 3.10+
 - `ffmpeg` 和 `ffprobe`
-- 可选：AES 相关 profile 需要 `cryptography`
+- AES 解密依赖 `cryptography`，普通安装会自动安装
 
 安装 ffmpeg：
 
@@ -47,12 +47,6 @@ winget install Gyan.FFmpeg
 ```bash
 git clone https://github.com/your-name/wallpaper-mp4-exporter.git
 cd wallpaper-mp4-exporter
-python3 -m pip install -e ".[aes]"
-```
-
-如果只需要转换普通媒体，使用下面命令即可：
-
-```bash
 python3 -m pip install -e .
 ```
 

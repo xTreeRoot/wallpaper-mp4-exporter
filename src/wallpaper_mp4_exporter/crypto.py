@@ -35,7 +35,7 @@ def decrypt_aes_ecb(data: bytes, key: bytes) -> bytes:
         from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     except ImportError as exc:
         raise RuntimeError(
-            "AES profiles require the optional dependency: pip install 'wallpaper-mp4-exporter[aes]'"
+            "AES support requires cryptography. Reinstall this package with: python3 -m pip install -e ."
         ) from exc
 
     decryptor = Cipher(algorithms.AES(key), modes.ECB()).decryptor()

@@ -295,18 +295,18 @@ wheels = [
 name = "wallpaper-mp4-exporter"
 version = "0.1.0"
 source = { editable = "." }
-
-[package.optional-dependencies]
-aes = [
+dependencies = [
     { name = "cryptography" },
 ]
+
+[package.optional-dependencies]
 dev = [
     { name = "pytest" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "cryptography", marker = "extra == 'aes'", specifier = ">=41" },
+    { name = "cryptography", specifier = ">=41" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
 ]
 provides-extras = ["aes", "dev"]
